@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Performance Predictor & Explainability (XAI) Dashboard</title>
+    <meta name="description" content="An interactive ML dashboard demonstrating student performance prediction using K-Nearest Neighbors, XGBoost, CatBoost, AdaBoost, Random Forest, SVR, and an Ensemble Voting Regressor with SHAP and LIME explainability.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-mode">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="app-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div class="logo-text">EduPredict <span class="logo-accent">XAI</span></div>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" id="btn-metrics" onclick="switchTab('metrics')">
+                    <i class="fa-solid fa-chart-line"></i> <span>Model Metrics</span>
+                </button>
+                <button class="nav-item" id="btn-predict" onclick="switchTab('predict')">
+                    <i class="fa-solid fa-sliders"></i> <span>Interactive Predictor</span>
+                </button>
+                <button class="nav-item" id="btn-explain" onclick="switchTab('explain')">
+                    <i class="fa-solid fa-brain"></i> <span>Global Explainability</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="footer-info">
+                    <p>Python Flask Backend</p>
+                    <p class="status-indicator"><span class="dot green"></span> Running on port 5000</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-title">
+                    <h1 id="main-heading">Machine Learning Academic Performance Prediction & XAI</h1>
+                    <p class="subtitle">Based on: Wesam Ahmed et al. (2025) Scientific Reports</p>
+                </div>
+                <div class="header-actions">
+                    <div class="dataset-selector-container">
+                        <label for="global-dataset-select"><i class="fa-solid fa-database"></i> Dataset:</label>
+                        <select id="global-dataset-select" onchange="onDatasetChange(this.value)">
+                            <option value="dataset_1">Dataset 1 (10k Rows, 6 Features)</option>
+                            <option value="dataset_2">Dataset 2 (6.6k Rows, 20 Features)</option>
+                        </select>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Tabs -->
+            <div class="content-body">
+                <!-- SECTION 1: METRICS -->
+                <section class="content-section active" id="section-metrics">
+                    <div class="grid-layout">
+                        <!-- Top Cards -->
+                        <div class="metrics-cards-row">
+                            <div class="metric-card gradient-cyan">
+                                <div class="card-icon"><i class="fa-solid fa-star"></i></div>
+                                <div class="card-content">
+                                    <h3>Ensemble VR R² Score</h3>
+                                    <p class="card-value" id="val-r2">-</p>
+                                    <span class="card-subtext" id="lbl-r2-sub">Full Feature Set</span>
+                                </div>
+                            </div>
+                            <div class="metric-card gradient-purple">
+                                <div class="card-icon"><i class="fa-solid fa-arrow-down-long"></i></div>
+                                <div class="card-content">
+                                    <h3>Root Mean Sq. Error</h3>
+                                    <p class="card-value" id="val-rmse">-</p>
+                                    <span class="card-subtext">Lower is better</span>
+                                </div>
+                            </div>
+                            <div class="metric-card gradient-blue">
+                                <div class="card-icon"><i class="fa-solid fa-gauge"></i></div>
+                                <div class="card-content">
+                                    <h3>Mean Absolute Error</h3>
+                                    <p class="card-value" id="val-mae">-</p>
+                                    <span class="card-subtext">Avg prediction error</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Row -->
+                        <div class="chart-container-row">
+                            <div class="glass-card chart-card">
+                                <div class="card-header">
+                                    <h2><i class="fa-solid fa-chart-column"></i> R² Performance Comparison</h2>
+                                    <div class="toggle-container">
+                                        <button class="toggle-btn active" id="btn-chart-r2-all" onclick="changeChartMode('r2', false)">All Features</button>
+                                        <button class="toggle-btn" id="btn-chart-r2-fs" onclick="changeChartMode('r2', true)">Feature Selected</button>
+                                    </div>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="r2-comparison-chart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-card chart-card">
+                                <div class="card-header">
+                                    <h2><i class="fa-solid fa-chart-bar"></i> Error Metrics (MAE vs RMSE)</h2>
+                                    <div class="toggle-container">
+                                        <button class="toggle-btn active" id="btn-chart-err-all" onclick="changeChartMode('err', false)">All Features</button>
+                                        <button class="toggle-btn" id="btn-chart-err-fs" onclick="changeChartMode('err', true)">Feature Selected</button>
+                                    </div>
+                                </div>
+                                <div class="chart-wrapper">
+                                    <canvas id="error-comparison-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Table Card -->
+                        <div class="glass-card table-card">
+                            <div class="card-header">
+                                <h2><i class="fa-solid fa-table-list"></i> Model Comparative Results Table</h2>
+                                <span class="badge" id="lbl-table-subset">All Features</span>
+                            </div>
+                            <div class="table-wrapper">
+                                <table id="metrics-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Model / Algorithm</th>
+                                            <th>Mean Absolute Error (MAE)</th>
+                                            <th>Root Mean Squared Error (RMSE)</th>
+                                            <th>R-Squared (R²) Score</th>
+                                            <th>10-Fold CV R² (Ensemble VR)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="metrics-table-body">
+                                        <!-- Will be filled by JavaScript -->
+                                        <tr><td colspan="5" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> Loading metrics from server...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 2: INTERACTIVE PREDICTOR -->
+                <section class="content-section" id="section-predict">
+                    <div class="predictor-grid">
+                        <!-- Inputs Panel -->
+                        <div class="glass-card predictor-inputs-card">
+                            <div class="card-header">
+                                <h2><i class="fa-solid fa-square-poll-vertical"></i> Enter Student Attributes</h2>
+                                <div class="feature-mode-selector">
+                                    <label class="switch-label">
+                                        <input type="checkbox" id="chk-predict-fs" onchange="togglePredictFeatureSelection(this.checked)">
+                                        <span class="slider-switch"></span>
+                                        <span class="switch-text">Use Feature Selection</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="predictor-form-container">
+                                <form id="prediction-form" onsubmit="event.preventDefault(); requestPrediction();">
+                                    <div class="form-grid" id="prediction-inputs-container">
+                                        <!-- Generated dynamically in JS based on dataset selected -->
+                                    </div>
+                                    <button type="submit" class="submit-btn"><i class="fa-solid fa-microchip"></i> Predict Performance & Explain</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Results & LIME Panel -->
+                        <div class="predictor-results-panel">
+                            <!-- Numeric Prediction Gauge -->
+                            <div class="glass-card result-gauge-card">
+                                <h2>Predicted Score</h2>
+                                <div class="gauge-display-container">
+                                    <div class="gauge-ring">
+                                        <svg viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="45" class="gauge-bg"></circle>
+                                            <circle cx="50" cy="50" r="45" class="gauge-fill" id="gauge-fill-circle"></circle>
+                                        </svg>
+                                        <div class="gauge-value" id="lbl-prediction-value">-</div>
+                                        <div class="gauge-percent">%</div>
+                                    </div>
+                                    <div class="prediction-text" id="lbl-prediction-description">Enter details and click Predict to estimate academic score.</div>
+                                </div>
+                            </div>
+
+                            <!-- LIME Local Explanations -->
+                            <div class="glass-card lime-card">
+                                <div class="card-header">
+                                    <h2><i class="fa-solid fa-magnifying-glass-chart"></i> LIME Local Explanation</h2>
+                                    <span class="badge gradient-cyan">Real-time Attribution</span>
+                                </div>
+                                <div class="lime-explanation-intro">
+                                    Shows how each feature positively (increases score) or negatively (decreases score) contributed to this specific student's prediction.
+                                </div>
+                                <div class="lime-bars-wrapper" id="lime-bars-container">
+                                    <div class="no-data-msg">
+                                        <i class="fa-solid fa-chart-simple"></i>
+                                        <p>No explanation generated yet. Run a prediction to see local feature importances.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 3: SHAP GLOBAL EXPLAINABILITY -->
+                <section class="content-section" id="section-explain">
+                    <div class="grid-layout">
+                        <!-- SHAP Intro -->
+                        <div class="glass-card explanation-intro-card">
+                            <h2><i class="fa-solid fa-eye"></i> SHAP Global Model Interpretability</h2>
+                            <p>
+                                While LIME explains individual student predictions (local), SHAP (SHapley Additive exPlanations) provides a global perspective on how features impact the overall Ensemble Voting Regressor across the entire dataset. It distributes credits fairly among all features based on game theory.
+                            </p>
+                            <div class="alert-info">
+                                <i class="fa-solid fa-lightbulb"></i>
+                                <span id="shap-insight-text">For Dataset 1, <strong>Previous Scores</strong> accounts for approximately 62% of the model's overall prediction power, followed by <strong>Hours Studied</strong>. Other variables like Sleep Hours or extracurricular activities show negligible global influence.</span>
+                            </div>
+                        </div>
+
+                        <!-- SHAP Chart Row -->
+                        <div class="glass-card shap-chart-card">
+                            <div class="card-header">
+                                <h2><i class="fa-solid fa-chart-simple"></i> Global Feature Importance (SHAP values)</h2>
+                                <span class="badge gradient-purple">Mean Absolute SHAP</span>
+                            </div>
+                            <div class="chart-wrapper shap-chart-wrapper">
+                                <canvas id="shap-global-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Script -->
+    <script src="app.js"></script>
+</body>
+</html>

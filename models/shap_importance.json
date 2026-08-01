@@ -1,0 +1,30 @@
+{
+    "dataset_1": {
+        "Previous Scores": 0.7963420152664185,
+        "Hours Studied": 0.32679980993270874,
+        "Sleep Hours": 0.0336221344769001,
+        "Sample Question Papers Practiced": 0.024512803182005882,
+        "Extracurricular Activities": 0.013417248614132404
+    },
+    "dataset_2": {
+        "Attendance": 1.93600594997406,
+        "Hours_Studied": 1.313542366027832,
+        "Previous_Scores": 0.5440928936004639,
+        "Parental_Involvement": 0.4566653072834015,
+        "Access_to_Resources": 0.45005813241004944,
+        "Tutoring_Sessions": 0.406642347574234,
+        "Peer_Influence": 0.2381867915391922,
+        "Family_Income": 0.23079612851142883,
+        "Parental_Education_Level": 0.2111719250679016,
+        "Distance_from_Home": 0.20613601803779602,
+        "Motivation_Level": 0.1793886423110962,
+        "Extracurricular_Activities": 0.1761585921049118,
+        "Teacher_Quality": 0.17359857261180878,
+        "Learning_Disabilities": 0.0930936262011528,
+        "Internet_Access": 0.07500792294740677,
+        "Physical_Activity": 0.07103661447763443,
+        "Sleep_Hours": 0.014810871332883835,
+        "Gender": 0.001399383181706071,
+        "School_Type": 0.0
+    }
+}
